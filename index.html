@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="id-ID">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Level Akun TikTok & Biaya Total</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    
+    <!-- Konfigurasi Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        tiktok: {
+                            dark: '#161823',
+                            blue: '#25F4EE',
+                            red: '#FF0050',
+                            card: '#1E2130',
+                            text: '#F1F1F2',
+                            muted: '#8A8B91'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .gradient-text {
+                background: linear-gradient(90deg, #25F4EE 0%, #FF0050 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            .card-glow {
+                box-shadow: 0 0 15px rgba(37, 244, 238, 0.15), 0 0 30px rgba(255, 0, 80, 0.1);
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="bg-tiktok-dark text-tiktok-text min-h-screen font-sans">
+
+    <!-- Header -->
+    <header class="py-8 px-4 sm:px-6 text-center">
+        <h1 class="text-[clamp(1.8rem,4vw,2.8rem)] font-bold mb-2">
+            <span class="gradient-text">Kalkulator Level Akun TikTok</span>
+        </h1>
+        <p class="text-tiktok-muted max-w-2xl mx-auto">
+            Hitung total biaya untuk menaikkan level akun dari Level 1 hingga Level 50 dengan akurat.
+            <br>Hitung berdasarkan harga <strong>1 Koin = Rp 200</strong>
+        </p>
+    </header>
+
+    <!-- Konten Utama -->
+    <main class="container mx-auto px-4 sm:px-6 pb-16">
+        
+        <!-- Info Kartu -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-tiktok-card rounded-xl p-6 card-glow transform hover:-translate-y-1 transition-all duration-300">
+                <i class="fa fa-level-up text-tiktok-blue text-3xl mb-4"></i>
+                <h3 class="text-lg font-semibold mb-1">Rentang Level</h3>
+                <p class="text-2xl font-bold">1 — 50</p>
+            </div>
+            
+            <div class="bg-tiktok-card rounded-xl p-6 card-glow transform hover:-translate-y-1 transition-all duration-300">
+                <i class="fa fa-money text-tiktok-red text-3xl mb-4"></i>
+                <h3 class="text-lg font-semibold mb-1">Harga Per Koin</h3>
+                <p class="text-2xl font-bold">Rp 200</p>
+            </div>
+            
+            <div class="bg-tiktok-card rounded-xl p-6 card-glow transform hover:-translate-y-1 transition-all duration-300">
+                <i class="fa fa-calculator text-yellow-400 text-3xl mb-4"></i>
+                <h3 class="text-lg font-semibold mb-1">Total Biaya Keseluruhan</h3>
+                <p class="text-2xl font-bold" id="totalKeseluruhan">Rp 0</p>
+            </div>
+        </div>
+
+        <!-- Grafik -->
+        <div class="bg-tiktok-card rounded-xl p-6 mb-10 card-glow">
+            <h2 class="text-xl font-semibold mb-6">Grafik Kenaikan Biaya</h2>
+            <div class="w-full h-[300px]">
+                <canvas id="grafikBiaya"></canvas>
+            </div>
+        </div>
+
+        <!-- Tabel Data -->
+        <div class="bg-tiktok-card rounded-xl p-6 card-glow">
+            <h2 class="text-xl font-semibold mb-6">Daftar Biaya Per Level</h2>
+            
+            <div class="overflow-x-auto scrollbar-hide rounded-lg">
+                <table class="w-full min-w-[640px]">
+                    <thead class="bg-black/30 text-left">
+                        <tr>
+                            <th class="p-4 font-semibold rounded-tl-lg">Level</th>
+                            <th class="p-4 font-semibold">Koin Dibutuhkan</th>
+                            <th class="p-4 font-semibold">Biaya Per Level</th>
+                            <th class="p-4 font-semibold rounded-tr-lg">Biaya Total Sampai Level Ini</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelBody">
+                        <!-- Data akan diisi otomatis dengan JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-black/30 py-6 text-center text-tiktok-muted text-sm">
+        <p>Data jumlah koin berdasarkan standar level akun TikTok | Harga dapat berubah sewaktu-waktu</p>
+        <p class="mt-1">© 2026 Kalkulator Level TikTok</p>
+    </footer>
+
+
+    <script>
+        // Data Koin per Level (dari hasil salinan sebelumnya)
+        const dataLevel = [
+            { level: 1, koin: 1 },
+            { level: 2, koin: 8 },
+            { level: 3, koin: 18 },
+            { level: 4, koin: 34 },
+            { level: 5, koin: 56 },
+            { level: 6, koin: 90 },
+            { level: 7, koin: 140 },
+            { level: 8, koin: 220 },
+            { level: 9, koin: 340 },
+            { level: 10, koin: 530 },
+            { level: 11, koin: 820 },
+            { level: 12, koin: 1260 },
+            { level: 13, koin: 1930 },
+            { level: 14, koin: 2840 },
+            { level: 15, koin: 4340 },
+            { level: 16, koin: 6420 },
+            { level: 17, koin: 9280 },
+            { level: 18, koin: 13800 },
+            { level: 19, koin: 19400 },
+            { level: 20, koin: 27600 },
+            { level: 21, koin: 39800 },
+            { level: 22, koin: 54600 },
+            { level: 23, koin: 75800 },
+            { level: 24, koin: 105000 },
+            { level: 25, koin: 144000 },
+            { level: 26, koin: 196000 },
+            { level: 27, koin: 265000 },
+            { level: 28, koin: 357000 },
+            { level: 29, koin: 478000 },
+            { level: 30, koin: 642000 },
+            { level: 31, koin: 845000 },
+            { level: 32, koin: 1120000 },
+            { level: 33, koin: 1420000 },
+            { level: 34, koin: 1920000 },
+            { level: 35, koin: 2500000 },
+            { level: 36, koin: 3230000 },
+            { level: 37, koin: 4180000 },
+            { level: 38, koin: 5180000 },
+            { level: 39, koin: 6890000 },
+            { level: 40, koin: 9420000 },
+            { level: 41, koin: 11200000 },
+            { level: 42, koin: 14180000 },
+            { level: 43, koin: 17800000 },
+            { level: 44, koin: 22300000 },
+            { level: 45, koin: 33000000 },
+            { level: 46, koin: 37500000 },
+            { level: 47, koin: 47500000 },
+            { level: 48, koin: 60000000 },
+            { level: 49, koin: 75000000 },
+            { level: 50, koin: 97500000 }
+        ];
+
+        const HARGA_PER_KOIN = 200; // Rupiah
+
+        // Format angka ke Rupiah
+        function formatRupiah(angka) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(angka);
+        }
+
+        // Menghitung & menampilkan data
+        let totalBiaya = 0;
+        const tabelBody = document.getElementById('tabelBody');
+        const labelLevel = [];
+        const dataBiayaTotal = [];
+
+        dataLevel.forEach(item => {
+            const biayaLevel = item.koin * HARGA_PER_KOIN;
+            totalBiaya += biayaLevel;
+
+            // Tambah ke tabel
+            const baris = document.createElement('tr');
+            baris.className = 'border-b border-white/5 hover:bg-white/5 transition-colors';
+            baris.innerHTML = `
+                <td class="p-4">${item.level}</td>
+                <td class="p-4">${item.koin.toLocaleString('id-ID')}</td>
+                <td class="p-4">${formatRupiah(biayaLevel)}</td>
+                <td class="p-4 font-semibold text-tiktok-blue">${formatRupiah(totalBiaya)}</td>
+            `;
+            tabelBody.appendChild(baris);
+
+            // Data untuk grafik
+            labelLevel.push(`Lv. ${item.level}`);
+            dataBiayaTotal.push(totalBiaya);
+        });
+
+        // Tampilkan total keseluruhan
+        document.getElementById('totalKeseluruhan').textContent = formatRupiah(totalBiaya);
+
+        // Buat grafik
+        const ctx = document.getElementById('grafikBiaya').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labelLevel,
+                datasets: [{
+                    label: 'Total Biaya Akumulasi',
+                    data: dataBiayaTotal,
+                    borderColor: '#FF0050',
+                    backgroundColor: 'rgba(255, 0, 80, 0.1)',
+                    tension: 0.3,
+                    fill: true,
+                    pointBackgroundColor: '#25F4EE',
+                    pointRadius: 3,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)'
+                        },
+                        ticks: {
+                            color: '#8A8B91',
+                            callback: function(value) {
+                                return 'Rp ' + value.toLocaleString('id-ID');
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#8A8B91',
+                            maxRotation: 45,
+                            minRotation: 0
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#F1F1F2',
+                            font: { weight: 'bold' }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(22, 24, 35, 0.95)',
+                        titleColor: '#25F4EE',
+                        bodyColor: '#fff',
+                        borderColor: '#FF0050',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                return 'Total: ' + formatRupiah(context.raw);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+    </script>
+
+</body>
+</html>
